@@ -46,7 +46,7 @@
       n += amp * Math.sin(fk * k + 1.7 * o + p * 0.70) *
                  Math.cos(ft * t + 2.3 * o - p * 0.55);
       norm += amp;
-      amp *= 0.62; fk *= 2.11; ft *= 1.97;
+      amp *= 0.55; fk *= 2.11; ft *= 1.97;
     }
     return n / norm;
   }
@@ -58,16 +58,16 @@
   }
 
   function field(k, t, p) {
-    var v = sviVol(k, t, p) * (1 + 0.36 * rough(k, t, p));
+    var v = sviVol(k, t, p) * (1 + 0.28 * rough(k, t, p));
     v += bump(k, t, -0.36 + 0.54 * Math.sin(p * 0.45),
                     0.78 + 0.42 * Math.sin(p * 0.31 + 1.1),
-                    0.24, 0.38, 0.62);
+                    0.24, 0.38, 0.50);
     v += bump(k, t,  0.48 + 0.34 * Math.sin(p * 0.37 + 2.2),
                      1.55 + 0.50 * Math.sin(p * 0.26 + 0.4),
-                     0.20, 0.32, 0.38);
+                     0.20, 0.32, 0.30);
     v += bump(k, t, -0.05 + 0.60 * Math.sin(p * 0.23 + 4.0),
                      2.05 + 0.30 * Math.sin(p * 0.41 + 2.7),
-                     0.18, 0.30, 0.26);
+                     0.18, 0.30, 0.21);
     return v;
   }
 
