@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gradient boosting for volatility &mdash; Volatility Insights</title>
+<meta name="description" content="Where XGBoost wins on volatility forecasting and where it does not: feature design, target transforms, extrapolation limits and leakage traps.">
+<link rel="canonical" href="https://volatility-insights.com/notes/gradient-boosting-volatility/">
+<meta property="og:title" content="Gradient boosting for volatility: where XGBoost wins">
+<meta property="og:description" content="Feature design, target transforms and leakage traps.">
+<meta property="og:image" content="https://volatility-insights.com/logo.png">
+<link rel="icon" href="../../logo.png">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../logo.png" alt="">Volatility <span>Insights</span></a>
+    <nav>
+      <a href="../../#models">Models</a>
+      <a href="../../#notes">Notes</a>
+      <a href="../../#channel">Channel</a>
+    </nav>
+  </div>
+</header>
+
+<article class="article">
+  <div class="wrap">
+    <a class="back" href="../../#notes">&larr; All notes</a>
+    <div class="kicker"><span class="tag">Machine learning</span><span>Applied</span><span>14 min</span></div>
+    <h1>Gradient boosting for volatility: where XGBoost wins and where it does not</h1>
+    <p class="standfirst">
+      Boosted trees are the strongest general-purpose model for tabular data, and
+      volatility forecasting is a tabular problem. That is the case for. The case
+      against is that trees cannot extrapolate, and volatility spikes are extrapolation.
+    </p>
+
+    <h2>What boosting is doing</h2>
+    <p>
+      Gradient boosting fits an additive ensemble of shallow trees, each new tree
+      fitted to the gradient of the loss with respect to the current prediction.
+      XGBoost's contribution was to use a second-order expansion of the loss and to
+      put explicit regularisation on tree complexity and leaf weights, which is why it
+      behaves so much better than naive boosting on noisy data. LightGBM grows
+      leaf-wise with histogram binning, which is faster on wide feature sets and, with
+      default settings, somewhat more eager to overfit.
+    </p>
+    <p>
+      The property that matters here: a tree predicts a constant within each leaf.
+      The model's output is therefore bounded by the range of targets observed during
+      training. It cannot produce a number it has never seen.
+    </p>
+
+    <h2>Where it wins: breadth of information</h2>
+    <p>
+      HAR uses three numbers from one series. Boosting shines when the honest answer
+      to "what else might predict tomorrow's volatility?" is a long list, because it
+      handles many correlated predictors, nonlinearity and interactions without any of
+      them being specified in advance. A feature set worth building:
+    </p>
+    <ul>
+      <li><strong>Own history.</strong> Log RV at the HAR horizons, plus the continuous
+          and jump components separately.</li>
+      <li><strong>Asymmetry.</strong> Signed return, semivariances, and the leverage
+          interaction between a negative return and current volatility level.</li>
+      <li><strong>Forward-looking.</strong> Implied volatility, the variance risk
+          premium, the term-structure slope of implied vol. These carry information no
+          backward-looking measure has.</li>
+      <li><strong>Cross-sectional.</strong> Realized volatility of related assets and
+          indices. Spillover is real and HAR ignores it entirely.</li>
+      <li><strong>Microstructure.</strong> Spreads, volume, order-flow imbalance,
+          intraday range measures.</li>
+      <li><strong>Calendar.</strong> Day of week, expiry and roll dates, scheduled macro
+          releases, earnings. Cheap, and trees use them well.</li>
+    </ul>
+    <p>
+      Three modelling choices repeatedly turn out to matter more than hyperparameters:
+    </p>
+    <ol>
+      <li><strong>Predict log RV.</strong> The raw target is right-skewed and
+          heteroskedastic; squared error on it puts nearly all the gradient on crisis
+          days. Logs fix this. Add the variance correction when inverting.</li>
+      <li><strong>Predict the residual against HAR.</strong> Let OLS handle the linear
+          persistence it already captures perfectly, and give boosting only the part
+          that is left. This preserves HAR's extrapolation behaviour while keeping the
+          nonlinear gains &mdash; usually the single biggest improvement available.</li>
+      <li><strong>Tune conservatively.</strong> Shallow trees (depth three to six),
+          small learning rate with early stopping on a time-ordered validation split,
+          and subsampling. Financial data has a low signal-to-noise ratio; capacity is
+          rarely the binding constraint.</li>
+    </ol>
+
+    <h2>Where it loses</h2>
+    <div class="callout">
+      <p>
+        <strong>The extrapolation problem.</strong> If the training set's highest
+        observed volatility is twenty-five percent annualised, the model will not
+        predict sixty. It will saturate at its top leaf and stay there. Precisely when
+        an accurate forecast is most valuable, a tree ensemble is structurally incapable
+        of producing one. A linear model in logs has no such ceiling.
+      </p>
+    </div>
+    <p>
+      Related weaknesses worth stating plainly:
+    </p>
+    <ul>
+      <li><strong>Non-stationarity.</strong> Learned splits encode the level of the
+          regime they were fitted in. Refit on a rolling window and accept that some of
+          the model's knowledge has an expiry date.</li>
+      <li><strong>Sample size.</strong> Twenty years of daily data is roughly five
+          thousand rows, with strong autocorrelation reducing the effective count
+          further. That is a small dataset by machine learning standards.</li>
+      <li><strong>Attribution is not explanation.</strong> SHAP values tell you what the
+          model used. They say nothing about causality, and reading them as economics is
+          a common and expensive error.</li>
+    </ul>
+
+    <h2>The leakage traps</h2>
+    <p>
+      Almost every spectacular volatility backtest is a leakage bug. The usual suspects:
+    </p>
+    <ul>
+      <li><strong>Random cross-validation.</strong> K-fold on time series trains on the
+          future. Use a forward-chaining or purged split with an embargo around the
+          test window.</li>
+      <li><strong>Global scaling.</strong> Standardising features using the full
+          sample's mean and standard deviation leaks future distribution information.
+          Fit scalers inside the training fold only.</li>
+      <li><strong>Overlapping targets.</strong> A twenty-two-day-ahead target overlaps
+          across consecutive rows. Without purging, near-identical observations appear
+          in both train and test.</li>
+      <li><strong>Revision and publication lags.</strong> Use the value that was
+          available at the decision time, not the revised series you downloaded today.</li>
+      <li><strong>Tuning on the test set.</strong> Selecting hyperparameters by test
+          performance makes the reported number an in-sample number.</li>
+    </ul>
+
+    <h2>An honest summary</h2>
+    <p>
+      With HAR's own inputs, XGBoost roughly ties HAR and costs far more to maintain.
+      With a genuinely wider feature set &mdash; implied volatility, cross-asset,
+      order flow &mdash; it produces a real and repeatable improvement, typically
+      largest at short horizons and smallest at long ones. Fitted as a residual
+      correction on top of HAR rather than as a replacement, it keeps the linear
+      model's extrapolation behaviour and adds the nonlinear structure. That hybrid is
+      where we have found the reliable gains, and it is the configuration we would
+      defend in front of a sceptical risk committee.
+    </p>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>Chen, T. &amp; Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. <em>KDD '16</em>, 785&ndash;794.</li>
+      <li>Ke, G. et al. (2017). LightGBM: A Highly Efficient Gradient Boosting Decision Tree. <em>NeurIPS 30</em>.</li>
+      <li>Friedman, J. H. (2001). Greedy Function Approximation: A Gradient Boosting Machine. <em>Annals of Statistics</em> 29(5), 1189&ndash;1232.</li>
+      <li>Gu, S., Kelly, B. &amp; Xiu, D. (2020). Empirical Asset Pricing via Machine Learning. <em>Review of Financial Studies</em> 33(5), 2223&ndash;2273.</li>
+      <li>Lundberg, S. &amp; Lee, S. (2017). A Unified Approach to Interpreting Model Predictions. <em>NeurIPS 30</em>.</li>
+      <li>Bergmeir, C. &amp; Benitez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. <em>Information Sciences</em> 191, 192&ndash;213.</li>
+    </ul>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Volatility Insights</span>
+    <span class="links">
+      <a href="mailto:info@volatility-insights.com">Email</a>
+      <a href="https://www.youtube.com/@volatility_insights" rel="noopener">YouTube</a>
+      <a href="../../">Home</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

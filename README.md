@@ -1,47 +1,67 @@
 # volatility-insights.com
 
-Static one-page site. No build step, no dependencies, no framework.
-
-## How to change the site
-
-1. Open `index.html`.
-2. Edit the text between the `<!-- ===== CONTENT ... -->` and `<!-- ===== END CONTENT ===== -->` markers.
-3. Commit and push:
-
-   ```powershell
-   git add -A
-   git commit -m "update site"
-   git push
-   ```
-
-Live within ~1 minute. You can also edit `index.html` straight in the GitHub web
-editor if you are not at your own machine.
-
-To preview locally, just double-click `index.html`.
+Static site for Volatility Insights, a research lab for volatility measurement,
+modelling and forecasting. Served by GitHub Pages from the `main` branch root.
 
 ## Files
 
-| File          | Purpose                                                        |
-| ------------- | -------------------------------------------------------------- |
-| `index.html`  | The whole page: content + styling in one file.                  |
-| `404.html`    | Shown for unknown URLs.                                         |
-| `CNAME`       | Tells GitHub Pages the custom domain. Do not delete or rename.  |
-| `.nojekyll`   | Skips Jekyll processing so files are served exactly as-is.      |
-| `robots.txt`  | Search engine rules.                                            |
-| `sitemap.xml` | Sitemap. Add a `<url>` entry if you add more pages.             |
+| Path | What it is |
+| --- | --- |
+| `index.html` | Front page. Editable content sits between the `CONTENT` and `END CONTENT` markers. |
+| `style.css` | All styling for every page. Colours are defined once in `:root`. |
+| `surface.js` | Animated SVI volatility surface drawn on the hero canvas. No dependencies. |
+| `logo.png` | 512x512 circular badge. Used as favicon, apple-touch-icon, Open Graph image and nav mark. |
+| `notes/<slug>/index.html` | One research note per folder, giving clean URLs. |
+| `404.html` | Styled not-found page. |
+| `CNAME` | Custom domain. Do not delete - Pages rewrites the domain setting from this file. |
+| `sitemap.xml` | Add an entry for every new note. |
+| `robots.txt` | Points crawlers at the sitemap. |
+| `.nojekyll` | Stops Pages from running Jekyll over the files. |
 
-## Hosting
+## Adding a research note
 
-* **GitHub Pages** builds and serves the site from the `main` branch, root folder.
-* **Cloudflare** is the DNS provider (and optionally CDN/WAF in front).
+1. Create `notes/<slug>/index.html`. Copy an existing note as the template.
+2. Keep the relative paths: `../../style.css` and `../../logo.png`.
+3. Update the `title`, `meta description`, `canonical` and Open Graph tags.
+4. Add a `.note` card to the `#notes` section of `index.html`.
+5. Add the URL to `sitemap.xml`.
 
-### DNS records in Cloudflare
+Available article classes: `.article`, `.kicker`, `.standfirst`, `.eq` (with a
+`.note` span for the caption), `.callout`, `.refs`, `.back`.
 
-| Type    | Name  | Value                                                                    |
-| ------- | ----- | ------------------------------------------------------------------------ |
-| `A`     | `@`   | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` |
-| `AAAA`  | `@`   | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` |
-| `CNAME` | `www` | `GeorgeHategan.github.io`                                                |
+## Changing the colours
 
-Cloudflare SSL/TLS encryption mode must be **Full (strict)**. `Flexible` causes a
-redirect loop with GitHub Pages.
+Everything derives from the custom properties at the top of `style.css`:
+`--bg`, `--panel`, `--panel-2`, `--text`, `--muted`, `--dim`, `--line`,
+`--line-soft`, `--accent` (logo cyan), `--accent-2` (logo coral), `--accent-3`.
+`surface.js` also interpolates between the cyan and coral values, so change them
+there too if you rebrand.
+
+## Local preview
+
+```
+python -m http.server 8000
+```
+
+Then open http://localhost:8000. A plain file open also works, but relative
+links to `notes/<slug>/` need the server.
+
+## Deploying
+
+```
+git add -A
+git commit -m "describe the change"
+git push origin main
+```
+
+Pages rebuilds automatically. Allow a minute, then hard-refresh.
+
+## Domain and email
+
+- DNS is managed in Cloudflare, records set to DNS only (grey cloud).
+- Contact address `info@volatility-insights.com` is a Cloudflare Email Routing
+  forward. MX, SPF, DKIM and DMARC records are in place and managed by Cloudflare.
+
+## Channel
+
+Videos are published at https://www.youtube.com/@volatility_insights

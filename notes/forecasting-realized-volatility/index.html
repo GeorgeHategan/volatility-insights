@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forecasting realized volatility, and what beats HAR &mdash; Volatility Insights</title>
+<meta name="description" content="Corsi's HAR regression is embarrassingly hard to beat. An honest horse race against it, and where rough volatility and deep learning earn their keep.">
+<link rel="canonical" href="https://volatility-insights.com/notes/forecasting-realized-volatility/">
+<meta property="og:title" content="Forecasting realized volatility, and what beats HAR">
+<meta property="og:description" content="An honest horse race against the HAR baseline.">
+<meta property="og:image" content="https://volatility-insights.com/logo.png">
+<link rel="icon" href="../../logo.png">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../logo.png" alt="">Volatility <span>Insights</span></a>
+    <nav>
+      <a href="../../#models">Models</a>
+      <a href="../../#notes">Notes</a>
+      <a href="../../#channel">Channel</a>
+    </nav>
+  </div>
+</header>
+
+<article class="article">
+  <div class="wrap">
+    <a class="back" href="../../#notes">&larr; All notes</a>
+    <div class="kicker"><span class="tag">Forecasting</span><span>Method</span><span>15 min</span></div>
+    <h1>Forecasting realized volatility, and what actually beats HAR</h1>
+    <p class="standfirst">
+      A three-term linear regression from 2009 is still the benchmark that most
+      sophisticated alternatives fail to clear. Understanding why is more useful
+      than any single model.
+    </p>
+
+    <h2>Get the target right first</h2>
+    <p>
+      GARCH infers a latent variance from daily returns. With intraday data you can
+      simply <em>measure</em> it. Sum squared intraday returns over the day and you
+      have realized variance, a consistent estimator of the day's integrated variance:
+    </p>
+    <div class="eq">
+      RV<sub>t</sub> = &sum;<sub>i=1..M</sub> r&sup2;<sub>t,i</sub>
+      <span class="note">Turns a latent state into an observable regressand.</span>
+    </div>
+    <p>
+      That is the good news. The bad news is that the estimator is contaminated by
+      market microstructure noise &mdash; bid-ask bounce, discrete prices, stale
+      quotes &mdash; and the contamination grows as sampling gets finer. Sample at
+      one-second frequency and you are largely measuring the spread. Two standard
+      responses:
+    </p>
+    <ul>
+      <li><strong>Sparse sampling.</strong> Five-minute returns, chosen because the
+          noise bias has not yet dominated. Crude, but it survives contact with real data.</li>
+      <li><strong>Realized kernels.</strong> Barndorff-Nielsen, Hansen, Lunde and
+          Shephard's estimator uses autocovariance corrections to stay consistent under
+          noise, so you can use all the data instead of discarding most of it.</li>
+    </ul>
+    <p>
+      Separately, jumps should not be treated like diffusive variance. Bipower
+      variation estimates the continuous part only; the difference against RV
+      identifies the jump contribution. It matters because the two components have
+      very different persistence &mdash; the continuous part is highly predictable,
+      jumps essentially are not.
+    </p>
+    <div class="callout">
+      <p>
+        <strong>Before any modelling:</strong> decide the sampling frequency, the noise
+        correction, the overnight-return treatment and the jump handling. These four
+        choices move out-of-sample accuracy more than the choice between HAR and a
+        neural network.
+      </p>
+    </div>
+
+    <h2>The benchmark: HAR</h2>
+    <p>
+      Corsi's (2009) Heterogeneous Autoregressive model is motivated by the idea that
+      different participants act on different horizons &mdash; intraday traders,
+      portfolio managers, long-term investors &mdash; and each generates volatility at
+      their own frequency. The implementation is a regression on daily, weekly and
+      monthly averages of past realized volatility:
+    </p>
+    <div class="eq">
+      RV<sub>t+1</sub> = &beta;<sub>0</sub> + &beta;<sub>d</sub> RV<sup>(d)</sup><sub>t</sub> + &beta;<sub>w</sub> RV<sup>(w)</sup><sub>t</sub> + &beta;<sub>m</sub> RV<sup>(m)</sup><sub>t</sub> + &epsilon;<sub>t+1</sub>
+      <span class="note">Three regressors. Ordinary least squares. That is the whole model.</span>
+    </div>
+    <p>
+      It is not a long-memory model, but the cascade of three horizons reproduces
+      hyperbolic-looking decay well enough to be indistinguishable in practice. It has
+      no convergence problems, no likelihood surface to get lost on, and it takes
+      milliseconds to fit.
+    </p>
+    <p>Two refinements are almost free:</p>
+    <ul>
+      <li>Fit in <strong>logs</strong>. RV is right-skewed; log RV is close to Gaussian,
+          which makes OLS far better behaved. Remember the Jensen correction when
+          transforming back.</li>
+      <li>Use <strong>HAR-RV-J</strong> or <strong>CHAR</strong>: separate the continuous
+          and jump components and let the regression assign them different coefficients.</li>
+    </ul>
+
+    <h2>The challengers</h2>
+    <p><strong>Realized GARCH and HEAVY.</strong> Both bolt a realized measure onto a
+      GARCH-style recursion. Realized GARCH (Hansen, Huang &amp; Shek, 2012) adds a
+      measurement equation linking the realized measure to latent variance, including
+      a leverage function. HEAVY (Shephard &amp; Sheppard) runs two equations and
+      adapts fast after variance breaks. Both beat daily-return GARCH comfortably.
+      Against HAR the margin is narrow and sample-dependent.</p>
+
+    <p><strong>Rough volatility.</strong> Gatheral, Jaisson and Rosenbaum showed that
+      log realized volatility behaves like fractional Brownian motion with a Hurst
+      exponent around 0.1 &mdash; far rougher than the smooth paths standard stochastic
+      volatility models assume. The resulting RFSV forecast formula is parsimonious
+      and performs well. Honest caveat: the measured roughness is partly an artefact
+      of estimation error in RV, and the debate over how much is genuine is unresolved.</p>
+
+    <p><strong>Machine learning.</strong> Gradient boosting, LSTMs and temporal fusion
+      transformers all deliver gains when the feature set is genuinely richer &mdash;
+      cross-asset RVs, implied vol, order-flow imbalance, macro calendars. Given the
+      same three HAR inputs, they typically match HAR and sometimes do worse. The
+      lesson is consistent: <em>the gain comes from the features, not the function class.</em></p>
+
+    <h2>Evaluating honestly</h2>
+    <p>This is where most comparisons quietly break.</p>
+    <ul>
+      <li><strong>Loss function.</strong> MSE on variance is dominated by a few crisis
+          days. <strong>QLIKE</strong> is scale-invariant and robust to noise in the
+          volatility proxy, which is why it is the standard choice.</li>
+      <li><strong>Proxy error.</strong> The target is itself estimated. Patton showed
+          only certain loss functions preserve the true ranking when the proxy is
+          noisy; MSE and QLIKE do, many popular alternatives do not.</li>
+      <li><strong>Protocol.</strong> Rolling or expanding window, refit on schedule, and
+          respect publication lags. A macro variable used on the day of release that
+          was actually published after the close is leakage.</li>
+      <li><strong>Significance.</strong> A lower average loss is not a result. Use
+          Diebold-Mariano for pairs and the Model Confidence Set when comparing many
+          models, otherwise you are selecting on noise.</li>
+    </ul>
+    <div class="callout">
+      <p>
+        <strong>Rule of thumb:</strong> if a new model beats HAR by less than a few
+        percent of QLIKE and does not survive a Model Confidence Set at ten percent,
+        treat the improvement as unproven. Publish the null result anyway.
+      </p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>Corsi, F. (2009). A Simple Approximate Long-Memory Model of Realized Volatility. <em>Journal of Financial Econometrics</em> 7(2), 174&ndash;196.</li>
+      <li>Barndorff-Nielsen, O. E., Hansen, P. R., Lunde, A. &amp; Shephard, N. (2008). Designing Realized Kernels. <em>Econometrica</em> 76(6), 1481&ndash;1536.</li>
+      <li>Hansen, P. R., Huang, Z. &amp; Shek, H. H. (2012). Realized GARCH: A Joint Model for Returns and Realized Measures of Volatility. <em>Journal of Applied Econometrics</em> 27(6), 877&ndash;906.</li>
+      <li>Gatheral, J., Jaisson, T. &amp; Rosenbaum, M. (2018). Volatility is Rough. <em>Quantitative Finance</em> 18(6), 933&ndash;949.</li>
+      <li>Patton, A. J. (2011). Volatility Forecast Comparison using Imperfect Volatility Proxies. <em>Journal of Econometrics</em> 160(1), 246&ndash;256.</li>
+      <li>Hansen, P. R., Lunde, A. &amp; Nason, J. M. (2011). The Model Confidence Set. <em>Econometrica</em> 79(2), 453&ndash;497.</li>
+    </ul>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Volatility Insights</span>
+    <span class="links">
+      <a href="mailto:info@volatility-insights.com">Email</a>
+      <a href="https://www.youtube.com/@volatility_insights" rel="noopener">YouTube</a>
+      <a href="../../">Home</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>

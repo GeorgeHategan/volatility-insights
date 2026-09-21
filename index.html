@@ -3,87 +3,278 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Volatility Insights</title>
-<meta name="description" content="Research and visual explainers on energy market volatility.">
+<title>Volatility Insights &mdash; a research lab for volatility</title>
+<meta name="description" content="An independent research lab studying how volatility is measured, modelled and forecast - from GARCH and HAR to rough volatility and gradient boosting.">
+<link rel="canonical" href="https://volatility-insights.com/">
 <meta property="og:title" content="Volatility Insights">
-<meta property="og:description" content="Research and visual explainers on energy market volatility.">
+<meta property="og:description" content="A research lab for volatility: measurement, surfaces, forecasting.">
 <meta property="og:url" content="https://volatility-insights.com/">
+<meta property="og:image" content="https://volatility-insights.com/logo.png">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128200;</text></svg>">
-<style>
-  :root {
-    --bg: #0d1117;
-    --panel: #161b22;
-    --line: #232b36;
-    --text: #e6edf3;
-    --muted: #9aa7b4;
-    --accent: #4cc9f0;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font: 16px/1.65 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
-  header { padding: 96px 0 64px; border-bottom: 1px solid var(--line); }
-  h1 { font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.1; margin: 0 0 16px; letter-spacing: -0.02em; }
-  h2 { font-size: 1.05rem; margin: 48px 0 16px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
-  .lead { font-size: 1.15rem; color: var(--muted); max-width: 52ch; margin: 0 0 32px; }
-  a { color: var(--accent); }
-  .btn {
-    display: inline-block; padding: 12px 22px; border-radius: 8px;
-    background: var(--accent); color: #06121a; font-weight: 600; text-decoration: none;
-  }
-  .btn:hover { filter: brightness(1.1); }
-  .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
-  .card h3 { margin: 0 0 8px; font-size: 1rem; }
-  .card p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-  footer { margin: 80px 0 48px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
-</style>
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ===== CONTENT: edit anything between here and the END marker ===== -->
-
-<header>
+<header class="nav">
   <div class="wrap">
-    <h1>Volatility Insights</h1>
-    <p class="lead">Research, data and short visual explainers on volatility in energy markets.</p>
-    <a class="btn" href="mailto:info@volatility-insights.com">Get in touch</a>
+    <a class="brand" href="/"><img src="logo.png" alt="">Volatility <span>Insights</span></a>
+    <nav>
+      <a href="#research">Research</a>
+      <a href="#models">Models</a>
+      <a href="#notes">Notes</a>
+      <a href="#channel">Channel</a>
+      <a href="#contact">Contact</a>
+    </nav>
   </div>
 </header>
 
-<main class="wrap">
+<!-- ===== CONTENT: edit anything between here and the END marker ===== -->
 
-  <h2>What we do</h2>
-  <div class="cards">
-    <div class="card">
-      <h3>Market analysis</h3>
-      <p>Quantifying price volatility and its drivers across day-ahead and balancing markets.</p>
+<div class="hero">
+  <canvas id="surface"></canvas>
+  <div class="veil"></div>
+  <div class="wrap">
+    <p class="eyebrow">Independent research lab</p>
+    <h1>The shape of<br>uncertainty.</h1>
+    <p class="lead">
+      We study how volatility is measured, how it is modelled, and how far ahead it
+      can honestly be forecast &mdash; across equity, rates, commodity and power markets.
+      Everything we learn gets published, in writing and on video.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://www.youtube.com/@volatility_insights" rel="noopener">Watch the channel</a>
+      <a class="btn btn-ghost" href="#notes">Read the notes</a>
     </div>
-    <div class="card">
-      <h3>Visual explainers</h3>
-      <p>Animated walkthroughs that make complex market mechanics easy to follow.</p>
-    </div>
-    <div class="card">
-      <h3>Advisory</h3>
-      <p>Practical guidance on process design, data flows and risk exposure.</p>
+    <p class="hero-note">
+      Above: a live SVI volatility surface.<br>
+      w(k) = a + b [ &rho;(k &minus; m) + &radic;((k &minus; m)&sup2; + &sigma;&sup2;) ],&nbsp;&nbsp;&sigma;<sub>imp</sub> = &radic;(w / t)<br>
+      Parameters drift slowly, so the smile steepens and flattens as &rho; moves.
+    </p>
+  </div>
+</div>
+
+<section id="research">
+  <div class="wrap">
+    <p class="sec-label">01 &mdash; What we work on</p>
+    <h2>Four questions, worked in the open</h2>
+    <p class="sec-intro">
+      Volatility is the most forecastable thing in finance and still routinely
+      forecast badly. Most of the damage happens before any model is fitted:
+      in how the target is measured and how the result is evaluated.
+    </p>
+    <div class="grid g2">
+      <div class="card">
+        <span class="num">01</span>
+        <h3>Measurement</h3>
+        <p>Realized variance, realized kernels, microstructure noise, jump separation.
+           You cannot forecast a quantity you have not defined properly.</p>
+      </div>
+      <div class="card">
+        <span class="num">02</span>
+        <h3>The surface</h3>
+        <p>Smile, skew and term structure; arbitrage-free parameterisation;
+           what the surface implies about the risk-neutral distribution.</p>
+      </div>
+      <div class="card">
+        <span class="num">03</span>
+        <h3>Forecasting</h3>
+        <p>Horizon by horizon, with honest out-of-sample protocol, sensible loss
+           functions and significance testing rather than a single flattering backtest.</p>
+      </div>
+      <div class="card">
+        <span class="num">04</span>
+        <h3>Regimes</h3>
+        <p>Clustering, long memory, roughness and structural breaks &mdash; why
+           persistence estimated in calm markets fails exactly when it matters.</p>
+      </div>
     </div>
   </div>
+</section>
 
-  <h2>Contact</h2>
-  <p>Email: <a href="mailto:info@volatility-insights.com">info@volatility-insights.com</a></p>
+<section id="models">
+  <div class="wrap">
+    <p class="sec-label">02 &mdash; Model zoo</p>
+    <h2>The models we build on</h2>
+    <p class="sec-intro">
+      Four families, each answering a different question. Nothing here is a
+      silver bullet; most of the skill is in knowing which family the problem belongs to.
+    </p>
+    <div class="zoo">
 
-</main>
+      <div class="fam">
+        <h3>Conditional variance</h3>
+        <p class="sub">Discrete time, daily returns</p>
+        <ul>
+          <li><b>ARCH</b> <i>Engle, 1982</i></li>
+          <li><b>GARCH</b> <i>Bollerslev, 1986</i></li>
+          <li><b>EGARCH</b> <i>Nelson, 1991</i></li>
+          <li><b>GJR-GARCH</b> <i>Glosten&ndash;Jagannathan&ndash;Runkle, 1993</i></li>
+          <li><b>TGARCH</b> <i>Zakoian, 1994</i></li>
+          <li><b>APARCH / fGARCH</b> <i>Hentschel, 1995</i></li>
+          <li><b>IGARCH &middot; EWMA</b> <i>RiskMetrics</i></li>
+          <li><b>GARCH-MIDAS</b> <i>mixed frequency</i></li>
+          <li><b>MF2-GARCH</b> <i>Conrad &amp; Engle, 2025</i></li>
+        </ul>
+      </div>
 
-<footer class="wrap">
-  &copy; 2026 Volatility Insights
-</footer>
+      <div class="fam">
+        <h3>Realized measures</h3>
+        <p class="sub">Intraday data, observable target</p>
+        <ul>
+          <li><b>Realized variance</b> <i>sum of squared returns</i></li>
+          <li><b>Realized kernels</b> <i>Barndorff-Nielsen et al.</i></li>
+          <li><b>Bipower variation</b> <i>jump-robust</i></li>
+          <li><b>HAR-RV</b> <i>Corsi, 2009</i></li>
+          <li><b>HAR-RV-J / CHAR</b> <i>jump and continuous split</i></li>
+          <li><b>Realized GARCH</b> <i>Hansen et al., 2012</i></li>
+          <li><b>HEAVY</b> <i>Shephard &amp; Sheppard</i></li>
+        </ul>
+      </div>
+
+      <div class="fam">
+        <h3>Continuous time</h3>
+        <p class="sub">Pricing, surfaces, roughness</p>
+        <ul>
+          <li><b>Black&ndash;Scholes</b> <i>constant vol baseline</i></li>
+          <li><b>Local volatility</b> <i>Dupire, 1994</i></li>
+          <li><b>Heston</b> <i>1993</i></li>
+          <li><b>SABR</b> <i>Hagan et al., 2002</i></li>
+          <li><b>Bates &middot; 3/2 &middot; CEV</b> <i>jumps and elasticity</i></li>
+          <li><b>SVI / SSVI</b> <i>Gatheral &amp; Jacquier</i></li>
+          <li><b>Rough Bergomi, RFSV</b> <i>Gatheral, Jaisson &amp; Rosenbaum</i></li>
+        </ul>
+      </div>
+
+      <div class="fam">
+        <h3>Machine learning</h3>
+        <p class="sub">Where it helps, and where it does not</p>
+        <ul>
+          <li><b>XGBoost</b> <i>gradient-boosted trees</i></li>
+          <li><b>LightGBM</b> <i>leaf-wise boosting</i></li>
+          <li><b>Random forest</b> <i>variance reduction</i></li>
+          <li><b>LSTM / GRU</b> <i>recurrent sequence models</i></li>
+          <li><b>Temporal Fusion Transformer</b> <i>attention, covariates</i></li>
+          <li><b>N-BEATS</b> <i>deep basis expansion</i></li>
+          <li><b>Gaussian processes</b> <i>uncertainty by construction</i></li>
+          <li><b>SHAP</b> <i>attribution, not explanation</i></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="notes">
+  <div class="wrap">
+    <p class="sec-label">03 &mdash; Notes</p>
+    <h2>Research notes</h2>
+    <p class="sec-intro">
+      Working notes, written to be read by someone who wants the reasoning and
+      not just the conclusion.
+    </p>
+    <div class="notes">
+
+      <a class="note" href="notes/garch-family/">
+        <div class="note-meta"><span class="tag">Econometrics</span><span>Primer</span><span>12 min</span></div>
+        <h3>A field guide to the GARCH family</h3>
+        <p>ARCH begat GARCH, and GARCH begat a zoo. What each extension is actually
+           fixing &mdash; asymmetry, persistence, long memory &mdash; and how to tell
+           which one your data is asking for.</p>
+      </a>
+
+      <a class="note" href="notes/forecasting-realized-volatility/">
+        <div class="note-meta"><span class="tag">Forecasting</span><span>Method</span><span>15 min</span></div>
+        <h3>Forecasting realized volatility, and what actually beats HAR</h3>
+        <p>Corsi's three-lag regression is embarrassingly hard to beat. We set up an
+           honest horse race against it and look at where the added complexity of
+           rough volatility and deep learning earns its keep.</p>
+      </a>
+
+      <a class="note" href="notes/gradient-boosting-volatility/">
+        <div class="note-meta"><span class="tag">Machine learning</span><span>Applied</span><span>14 min</span></div>
+        <h3>Gradient boosting for volatility: where XGBoost wins</h3>
+        <p>Trees cannot extrapolate, and volatility spikes are extrapolation. A
+           practical account of feature design, target transforms and the leakage
+           traps that make backtests look far better than they are.</p>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<section id="channel">
+  <div class="wrap">
+    <p class="sec-label">04 &mdash; Video</p>
+    <h2>The channel</h2>
+    <p class="sec-intro">
+      We publish explainers on
+      <a href="https://www.youtube.com/@volatility_insights" rel="noopener">@volatility_insights</a>
+      &mdash; a ladder that starts from nothing and ends at the current research frontier.
+      Every episode is built so the previous rung is the only prerequisite.
+    </p>
+    <div class="yt-track">
+      <div class="rung">
+        <span class="level">Rung 1 &mdash; Primers</span>
+        <ul>
+          <li>What volatility actually measures</li>
+          <li>Variance, standard deviation, annualisation</li>
+          <li>Why volatility clusters</li>
+          <li>Reading a smile and a skew</li>
+        </ul>
+      </div>
+      <div class="rung">
+        <span class="level">Rung 2 &mdash; Core methods</span>
+        <ul>
+          <li>EWMA and the RiskMetrics shortcut</li>
+          <li>GARCH(1,1) built from scratch</li>
+          <li>Realized variance from intraday data</li>
+          <li>HAR in twenty lines of Python</li>
+        </ul>
+      </div>
+      <div class="rung">
+        <span class="level">Rung 3 &mdash; Advanced</span>
+        <ul>
+          <li>The volatility surface in three dimensions</li>
+          <li>Rough volatility and the Hurst exponent</li>
+          <li>XGBoost and LSTM forecasting</li>
+          <li>Evaluating forecasts without fooling yourself</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <p class="sec-label">05 &mdash; Contact</p>
+    <h2>Get in touch</h2>
+    <p class="sec-intro">
+      Collaboration, data, a question about a note, or a topic you want covered
+      on the channel &mdash; all welcome.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="mailto:info@volatility-insights.com">info@volatility-insights.com</a>
+      <a class="btn btn-ghost" href="https://www.youtube.com/@volatility_insights" rel="noopener">YouTube</a>
+    </div>
+  </div>
+</section>
 
 <!-- ===== END CONTENT ===== -->
 
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Volatility Insights</span>
+    <span class="links">
+      <a href="mailto:info@volatility-insights.com">Email</a>
+      <a href="https://www.youtube.com/@volatility_insights" rel="noopener">YouTube</a>
+      <a href="#research">Top</a>
+    </span>
+  </div>
+</footer>
+
+<script src="surface.js"></script>
 </body>
 </html>

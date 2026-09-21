@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A field guide to the GARCH family &mdash; Volatility Insights</title>
+<meta name="description" content="ARCH begat GARCH, and GARCH begat a zoo. What each extension actually fixes, and how to tell which one your data is asking for.">
+<link rel="canonical" href="https://volatility-insights.com/notes/garch-family/">
+<meta property="og:title" content="A field guide to the GARCH family">
+<meta property="og:description" content="What each GARCH extension actually fixes.">
+<meta property="og:image" content="https://volatility-insights.com/logo.png">
+<link rel="icon" href="../../logo.png">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../../"><img src="../../logo.png" alt="">Volatility <span>Insights</span></a>
+    <nav>
+      <a href="../../#models">Models</a>
+      <a href="../../#notes">Notes</a>
+      <a href="../../#channel">Channel</a>
+    </nav>
+  </div>
+</header>
+
+<article class="article">
+  <div class="wrap">
+    <a class="back" href="../../#notes">&larr; All notes</a>
+    <div class="kicker"><span class="tag">Econometrics</span><span>Primer</span><span>12 min</span></div>
+    <h1>A field guide to the GARCH family</h1>
+    <p class="standfirst">
+      Every GARCH variant exists because someone found a specific way the plain
+      model was wrong. Learn the failure and the variant becomes obvious.
+    </p>
+
+    <h2>The observation that started it</h2>
+    <p>
+      Financial returns are close to unforecastable in their mean and highly
+      forecastable in their spread. Big moves follow big moves; quiet follows quiet.
+      This is <strong>volatility clustering</strong>, and it means the variance of the
+      error term is not constant &mdash; the residuals are heteroskedastic in a way
+      that depends on their own recent history.
+    </p>
+    <p>
+      Engle's 1982 ARCH model wrote that down directly. Split the residual into a
+      shock and a time-varying scale, <code>e<sub>t</sub> = &sigma;<sub>t</sub> z<sub>t</sub></code>,
+      and let the variance depend on past squared residuals:
+    </p>
+    <div class="eq">
+      &sigma;&sup2;<sub>t</sub> = &alpha;<sub>0</sub> + &alpha;<sub>1</sub> e&sup2;<sub>t-1</sub> + &hellip; + &alpha;<sub>q</sub> e&sup2;<sub>t-q</sub>
+      <span class="note">ARCH(q). Engle (1982), Econometrica 50(4).</span>
+    </div>
+    <p>
+      It worked, but it needed a long lag structure to capture persistence, which
+      burns degrees of freedom. Bollerslev's 1986 fix was to let variance depend on
+      <em>its own</em> past as well, giving the model an ARMA-like memory:
+    </p>
+    <div class="eq">
+      &sigma;&sup2;<sub>t</sub> = &omega; + &alpha; e&sup2;<sub>t-1</sub> + &beta; &sigma;&sup2;<sub>t-1</sub>
+      <span class="note">GARCH(1,1). Two parameters do the work of ten ARCH lags.</span>
+    </div>
+    <p>
+      GARCH(1,1) remains the default baseline for a reason. The sum
+      <code>&alpha; + &beta;</code> measures persistence; on daily equity data it
+      typically lands around 0.95 to 0.99, implying shocks decay slowly but the
+      process still mean-reverts to <code>&omega; / (1 &minus; &alpha; &minus; &beta;)</code>.
+    </p>
+
+    <h2>Failure one: shocks are not symmetric</h2>
+    <p>
+      In GARCH, <code>e&sup2;<sub>t-1</sub></code> throws away the sign. A ten percent
+      fall and a ten percent rise are treated identically. Markets disagree: negative
+      returns raise future volatility considerably more. This is the
+      <strong>leverage effect</strong>, and three models attack it differently.
+    </p>
+    <ul>
+      <li><strong>EGARCH</strong> (Nelson, 1991) models <code>log &sigma;&sup2;<sub>t</sub></code>,
+          so no positivity constraints are needed at all, and lets the sign and the
+          magnitude of the standardised shock enter through separate terms.</li>
+      <li><strong>GJR-GARCH</strong> (Glosten, Jagannathan &amp; Runkle, 1993) is the
+          blunt and effective version: add one term that only switches on when the
+          previous return was negative.</li>
+      <li><strong>TGARCH</strong> (Zakoian, 1994) does the same asymmetry on the
+          conditional <em>standard deviation</em> rather than the variance, which makes
+          it less sensitive to extreme observations.</li>
+    </ul>
+    <div class="callout">
+      <p>
+        <strong>Practical read:</strong> if the GJR asymmetry term is significant and
+        the model's log-likelihood improves materially, your series has leverage and
+        symmetric GARCH is systematically under-forecasting risk after sell-offs.
+        On equity indices this is almost always the case. On FX it usually is not.
+      </p>
+    </div>
+
+    <h2>Failure two: persistence hits the boundary</h2>
+    <p>
+      Estimate GARCH on a long enough daily sample and <code>&alpha; + &beta;</code>
+      creeps toward one. <strong>IGARCH</strong> takes that literally and imposes the
+      unit root, at which point shocks never die and the unconditional variance does
+      not exist. The <strong>EWMA</strong> estimator behind RiskMetrics is IGARCH with
+      <code>&omega; = 0</code> and a fixed decay &mdash; convenient, but the decay factor
+      is chosen rather than estimated, which quietly imports a subjective assumption.
+    </p>
+    <p>
+      Often the apparent unit root is an artefact. Structural breaks in the
+      unconditional variance level masquerade as extreme persistence, so a model that
+      allows the long-run level to move usually fits better than one that lets
+      short-run shocks live forever.
+    </p>
+
+    <h2>Failure three: one component is not enough</h2>
+    <p>
+      Volatility plainly has a fast component that reacts to yesterday and a slow
+      component tied to the macro environment. Multiplying them apart works better
+      than forcing a single decay rate to represent both.
+    </p>
+    <ul>
+      <li><strong>GARCH-MIDAS</strong> ties the slow component to lower-frequency
+          variables &mdash; macro releases, monthly indicators &mdash; via a MIDAS weighting.</li>
+      <li><strong>MF2-GARCH</strong> (Conrad &amp; Engle, 2025) pairs a short-run
+          GJR-GARCH component with a long-run component driven by a rolling average of
+          past standardised forecast errors. Individually those errors are
+          unpredictable; averaged over a window they are not. It keeps returns
+          stationary and supports recursive long-horizon forecasts, which single
+          component models handle poorly.</li>
+      <li><strong>APARCH</strong>, nested inside Hentschel's <strong>fGARCH</strong>
+          family, estimates the power the data wants rather than assuming squares.</li>
+    </ul>
+
+    <h2>Choosing one</h2>
+    <p>Work down this list rather than fitting everything and picking the winner:</p>
+    <ol>
+      <li>Confirm there is an effect at all &mdash; Engle's LM test on squared residuals.</li>
+      <li>Fit GARCH(1,1). This is the number every alternative must beat.</li>
+      <li>Test asymmetry. If present, move to GJR-GARCH before anything more exotic.</li>
+      <li>If <code>&alpha; + &beta;</code> is near one, suspect a break in level before
+          reaching for IGARCH.</li>
+      <li>If long horizons matter, go two-component.</li>
+      <li>Choose the innovation distribution deliberately. Gaussian QMLE gives
+          consistent parameters, but Student-t matters for tail quantiles and VaR.</li>
+    </ol>
+    <div class="callout">
+      <p>
+        <strong>The recurring mistake:</strong> ranking these models by in-sample
+        log-likelihood. More parameters always fit better. Rank them by out-of-sample
+        loss, and use QLIKE rather than MSE &mdash; MSE on a variance target is
+        dominated by a handful of crisis days and will pick whichever model happened
+        to overshoot during them.
+      </p>
+    </div>
+
+    <h2>References</h2>
+    <ul class="refs">
+      <li>Engle, R. F. (1982). Autoregressive Conditional Heteroskedasticity with Estimates of the Variance of United Kingdom Inflation. <em>Econometrica</em> 50(4), 987&ndash;1007.</li>
+      <li>Bollerslev, T. (1986). Generalized Autoregressive Conditional Heteroskedasticity. <em>Journal of Econometrics</em> 31(3), 307&ndash;327.</li>
+      <li>Nelson, D. B. (1991). Conditional Heteroskedasticity in Asset Returns: A New Approach. <em>Econometrica</em> 59(2), 347&ndash;370.</li>
+      <li>Glosten, L., Jagannathan, R. &amp; Runkle, D. (1993). On the Relation between the Expected Value and the Volatility of the Nominal Excess Return on Stocks. <em>Journal of Finance</em> 48(5).</li>
+      <li>Hentschel, L. (1995). All in the family: Nesting symmetric and asymmetric GARCH models. <em>Journal of Financial Economics</em> 39(1), 71&ndash;104.</li>
+      <li>Conrad, C. &amp; Engle, R. (2025). Modelling Volatility Cycles: The MF2-GARCH Model. <em>Journal of Applied Econometrics</em> 40, 438&ndash;454.</li>
+      <li>Engle, R. F. (2001). GARCH 101. <em>Journal of Economic Perspectives</em> 15(4), 157&ndash;168.</li>
+    </ul>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Volatility Insights</span>
+    <span class="links">
+      <a href="mailto:info@volatility-insights.com">Email</a>
+      <a href="https://www.youtube.com/@volatility_insights" rel="noopener">YouTube</a>
+      <a href="../../">Home</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>
