@@ -65,8 +65,8 @@ code, .mono { font-family: var(--mono); }
 .veil {
   position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(115% 85% at 12% 18%, rgba(6,17,28,.95) 0%, rgba(6,17,28,.74) 40%, rgba(6,17,28,.30) 100%),
-    linear-gradient(180deg, rgba(6,17,28,.55) 0%, rgba(6,17,28,0) 22%, rgba(6,17,28,.88) 100%);
+    radial-gradient(100% 78% at 8% 20%, rgba(6,17,28,.96) 0%, rgba(6,17,28,.76) 36%, rgba(6,17,28,.14) 100%),
+    linear-gradient(180deg, rgba(6,17,28,.58) 0%, rgba(6,17,28,0) 26%, rgba(6,17,28,0) 74%, rgba(6,17,28,.52) 100%);
 }
 .hero .wrap { position: relative; width: 100%; padding: 118px 28px 104px; }
 .eyebrow {

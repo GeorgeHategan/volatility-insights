@@ -8,9 +8,9 @@
   if (!canvas || !canvas.getContext) { return; }
   var ctx = canvas.getContext('2d');
 
-  var NK = 44, NT = 30;
-  var K0 = -1.25, K1 = 1.25;   /* log-moneyness */
-  var T0 = 0.10,  T1 = 2.30;   /* maturity, years */
+  var NK = 46, NT = 26;
+  var K0 = -1.15, K1 = 1.15;   /* log-moneyness */
+  var T0 = 0.30,  T1 = 2.40;   /* maturity, years */
 
   var W = 0, H = 0, raf = null;
   var reduced = window.matchMedia &&
@@ -38,8 +38,8 @@
   }
 
   /* cyan low ground -> coral high ridges, matching the badge */
-  function stroke(nz, alpha) {
-    var e = Math.pow(nz < 0 ? 0 : (nz > 1 ? 1 : nz), 1.35);
+  function stroke(e, alpha) {
+    e = e < 0 ? 0 : (e > 1 ? 1 : e);
     var r = Math.round(127 + (240 - 127) * e);
     var g = Math.round(212 + (137 - 212) * e);
     var b = Math.round(232 + ( 92 - 232) * e);
@@ -65,43 +65,45 @@
     var span = (hi - lo) || 1;
 
     var ct = Math.cos(theta), st = Math.sin(theta);
-    var scale = Math.min(W, H * 1.6) * 0.92;
+    var scale = Math.min(W * 0.95, H * 1.9) * 0.95;
+    var lift = H * 0.60;
     var pts = [];
     for (j = 0; j < NT; j++) {
       pts[j] = [];
+      var f = j / (NT - 1);
       for (i = 0; i < NK; i++) {
         var nx = i / (NK - 1) - 0.5;
-        var ny = j / (NT - 1) - 0.5;
+        var ny = 0.5 - f;              /* nearest maturity sits at the front */
         var nz = (vols[j][i] - lo) / span;
+        var e = Math.pow(nz, 0.62);    /* raw range is dominated by the short wings */
         var x = nx * ct - ny * st;
         var y = nx * st + ny * ct;
         pts[j][i] = [
           W * 0.5 + x * scale,
-          H * 0.58 + y * scale * 0.40 - nz * H * 0.34,
-          nz,
-          y
+          H * 0.80 + y * H * 0.64 - e * lift,
+          e
         ];
       }
     }
 
     ctx.clearRect(0, 0, W, H);
-    ctx.lineWidth = 1;
     ctx.lineJoin = 'round';
 
     /* term-structure lines (front to back), kept faint */
+    ctx.lineWidth = 0.9;
     for (i = 0; i < NK; i += 2) {
       ctx.beginPath();
       for (j = 0; j < NT; j++) {
         var q = pts[j][i];
         if (j === 0) { ctx.moveTo(q[0], q[1]); } else { ctx.lineTo(q[0], q[1]); }
       }
-      ctx.strokeStyle = stroke(pts[(NT / 2) | 0][i][2], 0.16);
+      ctx.strokeStyle = stroke(pts[(NT / 2) | 0][i][2], 0.20);
       ctx.stroke();
     }
 
-    /* smile lines, one per maturity, brighter as they come forward */
-    for (j = 0; j < NT; j++) {
-      var depth = 0.30 + 0.70 * (j / (NT - 1));
+    /* smile lines, one per maturity, drawn back to front and brighter as they advance */
+    for (j = NT - 1; j >= 0; j--) {
+      var depth = 1 - j / (NT - 1);
       var peak = 0;
       ctx.beginPath();
       for (i = 0; i < NK; i++) {
@@ -109,8 +111,8 @@
         if (p[2] > peak) { peak = p[2]; }
         if (i === 0) { ctx.moveTo(p[0], p[1]); } else { ctx.lineTo(p[0], p[1]); }
       }
-      ctx.strokeStyle = stroke(peak, 0.13 + 0.34 * depth);
-      ctx.lineWidth = 0.7 + 0.7 * depth;
+      ctx.strokeStyle = stroke(peak, 0.16 + 0.46 * depth);
+      ctx.lineWidth = 0.8 + 1.0 * depth;
       ctx.stroke();
     }
 
