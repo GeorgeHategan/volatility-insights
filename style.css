@@ -90,14 +90,6 @@ h1 {
 .btn-ghost { border-color: var(--line); color: var(--text); background: rgba(255,255,255,.02); }
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
-/* caption under the animated surface */
-.hero-note {
-  position: relative; margin-top: 46px; padding-left: 15px;
-  border-left: 2px solid var(--line);
-  font-family: var(--mono); font-size: .76rem; line-height: 1.8; color: var(--dim);
-  max-width: 62ch;
-}
-
 /* ---------- sections ---------- */
 section { padding: 84px 0; border-bottom: 1px solid var(--line-soft); }
 .sec-label {
