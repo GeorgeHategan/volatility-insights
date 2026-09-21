@@ -41,15 +41,18 @@ code, .mono { font-family: var(--mono); }
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line-soft);
 }
-.nav .wrap { display: flex; align-items: center; gap: 26px; height: 58px; }
+.nav .wrap { display: flex; align-items: center; gap: 26px; height: 64px; }
 .brand {
-  display: flex; align-items: center; gap: 11px;
+  display: flex; align-items: center; gap: 16px;
   font-family: var(--mono); font-size: .8rem; letter-spacing: .15em;
   text-transform: uppercase; color: var(--text); white-space: nowrap;
 }
+/* translateY is half the nav height, so the header rule bisects the badge */
 .brand img {
-  width: 30px; height: 30px; border-radius: 50%; display: block; flex: none;
-  box-shadow: 0 0 0 1px var(--line), 0 0 14px rgba(127,212,232,.18);
+  width: 76px; height: 76px; border-radius: 50%; display: block; flex: none;
+  transform: translateY(32px);
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--line), 0 0 22px rgba(127,212,232,.22);
 }
 .brand span { color: var(--accent); }
 .nav nav { margin-left: auto; display: flex; gap: 20px; }
@@ -221,4 +224,6 @@ footer a { color: var(--muted); }
   section { padding: 60px 0; }
   .nav nav { gap: 14px; }
   .nav nav a { font-size: .68rem; }
+  .brand { gap: 11px; font-size: .72rem; }
+  .brand img { width: 54px; height: 54px; }
 }
