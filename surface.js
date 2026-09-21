@@ -81,8 +81,8 @@
   }
 
   function frame(ms) {
-    var phase = ms * 0.00014;
-    var theta = 0.46 + 0.15 * Math.sin(ms * 0.000045);
+    var phase = ms * 0.000093;
+    var theta = 0.46 + 0.15 * Math.sin(ms * 0.00003);
 
     var vols = [], lo = 1e9, hi = -1e9, i, j, k, t, v;
     for (j = 0; j < NT; j++) {
@@ -157,7 +157,7 @@
   function start() {
     if (raf) { window.cancelAnimationFrame(raf); raf = null; }
     resize();
-    if (reduced) { frame(6600); } else { raf = window.requestAnimationFrame(frame); }
+    if (reduced) { frame(9900); } else { raf = window.requestAnimationFrame(frame); }
   }
 
   var t0 = null;
