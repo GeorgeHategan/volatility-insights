@@ -1,14 +1,16 @@
 /* Animated implied-volatility surface for the hero.
    Raw SVI (Gatheral) total variance for each maturity slice:
        w(k) = a + b * ( rho*(k-m) + sqrt((k-m)^2 + sigma^2) )
-   and the implied vol plotted is sqrt(w/t). Parameters breathe slowly so the
-   smile steepens and flattens the way a real surface does through the day. */
+   and the implied vol plotted is sqrt(w/t). On top of that smooth smile sits a
+   multi-octave rough field -- log volatility really does behave like fractional
+   Brownian motion with a very low Hurst exponent -- plus two drifting event
+   peaks, so the surface reads as terrain rather than a plane. */
 (function () {
   var canvas = document.getElementById('surface');
   if (!canvas || !canvas.getContext) { return; }
   var ctx = canvas.getContext('2d');
 
-  var NK = 46, NT = 26;
+  var NK = 58, NT = 34;
   var K0 = -1.15, K1 = 1.15;   /* log-moneyness */
   var T0 = 0.30,  T1 = 2.40;   /* maturity, years */
 
@@ -37,6 +39,38 @@
     return Math.sqrt(w / t);
   }
 
+  /* four octaves of smooth pseudo-noise, roughly -1..1 */
+  function rough(k, t, p) {
+    var n = 0, amp = 1, norm = 0, fk = 2.3, ft = 1.7, o;
+    for (o = 0; o < 4; o++) {
+      n += amp * Math.sin(fk * k + 1.7 * o + p * 0.70) *
+                 Math.cos(ft * t + 2.3 * o - p * 0.55);
+      norm += amp;
+      amp *= 0.62; fk *= 2.11; ft *= 1.97;
+    }
+    return n / norm;
+  }
+
+  /* a drifting gaussian peak: the mountain an expiry or an event puts there */
+  function bump(k, t, ck, ct, wk, wt, h) {
+    var dk = (k - ck) / wk, dt = (t - ct) / wt;
+    return h * Math.exp(-(dk * dk + dt * dt));
+  }
+
+  function field(k, t, p) {
+    var v = sviVol(k, t, p) * (1 + 0.36 * rough(k, t, p));
+    v += bump(k, t, -0.36 + 0.54 * Math.sin(p * 0.45),
+                    0.78 + 0.42 * Math.sin(p * 0.31 + 1.1),
+                    0.24, 0.38, 0.62);
+    v += bump(k, t,  0.48 + 0.34 * Math.sin(p * 0.37 + 2.2),
+                     1.55 + 0.50 * Math.sin(p * 0.26 + 0.4),
+                     0.20, 0.32, 0.38);
+    v += bump(k, t, -0.05 + 0.60 * Math.sin(p * 0.23 + 4.0),
+                     2.05 + 0.30 * Math.sin(p * 0.41 + 2.7),
+                     0.18, 0.30, 0.26);
+    return v;
+  }
+
   /* cyan low ground -> coral high ridges, matching the badge */
   function stroke(e, alpha) {
     e = e < 0 ? 0 : (e > 1 ? 1 : e);
@@ -56,17 +90,17 @@
       vols[j] = [];
       for (i = 0; i < NK; i++) {
         k = K0 + (K1 - K0) * (i / (NK - 1));
-        v = sviVol(k, t, phase);
+        v = field(k, t, phase);
         vols[j][i] = v;
         if (v < lo) { lo = v; }
         if (v > hi) { hi = v; }
       }
     }
-    var span = (hi - lo) || 1;
+    var span = ((hi - lo) * 0.86) || 1;   /* let the tallest peak saturate rather than crush the rest */
 
     var ct = Math.cos(theta), st = Math.sin(theta);
     var scale = Math.min(W * 0.95, H * 1.9) * 0.95;
-    var lift = H * 0.60;
+    var lift = H * 0.74;
     var pts = [];
     for (j = 0; j < NT; j++) {
       pts[j] = [];
@@ -75,12 +109,13 @@
         var nx = i / (NK - 1) - 0.5;
         var ny = 0.5 - f;              /* nearest maturity sits at the front */
         var nz = (vols[j][i] - lo) / span;
+        if (nz > 1) { nz = 1; }
         var e = Math.pow(nz, 0.62);    /* raw range is dominated by the short wings */
         var x = nx * ct - ny * st;
         var y = nx * st + ny * ct;
         pts[j][i] = [
           W * 0.5 + x * scale,
-          H * 0.80 + y * H * 0.64 - e * lift,
+          H * 0.86 + y * H * 0.64 - e * lift,
           e
         ];
       }

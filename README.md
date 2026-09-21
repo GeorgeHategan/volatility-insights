@@ -1,7 +1,7 @@
 # volatility-insights.com
 
-Static site for Volatility Insights, a research lab for volatility measurement,
-modelling and forecasting. Served by GitHub Pages from the `main` branch root.
+Static site for Volatility Insights, a quantitative research lab for volatility
+measurement, modelling and forecasting. Served by GitHub Pages from the `main` branch root.
 
 ## Files
 
@@ -9,8 +9,9 @@ modelling and forecasting. Served by GitHub Pages from the `main` branch root.
 | --- | --- |
 | `index.html` | Front page. Editable content sits between the `CONTENT` and `END CONTENT` markers. |
 | `style.css` | All styling for every page. Colours are defined once in `:root`. |
-| `surface.js` | Animated SVI volatility surface drawn on the hero canvas. No dependencies. |
+| `surface.js` | Animated SVI volatility surface plus a rough field and drifting peaks, drawn on the hero canvas. No dependencies. |
 | `logo.png` | 512x512 circular badge. Used as favicon, apple-touch-icon, Open Graph image and nav mark. |
+| `research/index.html` | The quantitative research page: protocol, evaluation standards, stack. |
 | `notes/<slug>/index.html` | One research note per folder, giving clean URLs. |
 | `404.html` | Styled not-found page. |
 | `CNAME` | Custom domain. Do not delete - Pages rewrites the domain setting from this file. |

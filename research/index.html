@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantitative research &mdash; Volatility Insights</title>
+<meta name="description" content="How the lab works: the protocol every volatility question goes through before anything gets published - measurement, baselines, out-of-sample evaluation and significance testing.">
+<link rel="canonical" href="https://volatility-insights.com/research/">
+<meta property="og:title" content="Quantitative research at Volatility Insights">
+<meta property="og:description" content="The protocol every volatility question goes through before anything gets published.">
+<meta property="og:image" content="https://volatility-insights.com/logo.png">
+<link rel="icon" href="../logo.png">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../logo.png" alt="">Volatility <span>Insights</span></a>
+    <nav>
+      <a href="../#models">Models</a>
+      <a href="../#notes">Notes</a>
+      <a href="../#channel">Channel</a>
+      <a href="../#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<article class="article">
+  <div class="wrap">
+    <a class="back" href="../">&larr; Home</a>
+    <div class="kicker"><span class="tag">Quantitative research</span><span>How the lab works</span></div>
+    <h1>Quantitative research</h1>
+    <p class="standfirst">
+      Every claim we publish is attached to a number someone else could reproduce.
+      This page is the protocol that gets us there, written down so you can hold
+      us to it.
+    </p>
+
+    <h2>What we mean by quantitative</h2>
+    <p>
+      Quantitative research here means a specific discipline, not a house style.
+      We do not publish a view on volatility without the estimator, the sample,
+      the evaluation protocol and the loss function that produced it. A statement
+      like "volatility mean-reverts" is not a finding; a half-life of eleven days
+      estimated on a stated sample, with a confidence interval and an
+      out-of-sample check, is.
+    </p>
+    <p>
+      Most of what circulates as volatility wisdom fails one of two tests. Either
+      it is unfalsifiable, or it was measured on a quantity that was defined
+      carelessly. The second failure is far more common and far more damaging,
+      because it produces confident numbers that happen to be about the wrong
+      thing.
+    </p>
+
+    <h2>The protocol</h2>
+    <p>Every question goes through the same eight steps, in this order.</p>
+    <ol>
+      <li><strong>State the question as a measurable quantity.</strong> Which
+          horizon, which asset, which definition of volatility. If it cannot be
+          written as a target variable, it is not yet a research question.</li>
+      <li><strong>Fix the measurement.</strong> Sampling frequency, noise
+          correction, jump treatment, overnight returns. Decided and documented
+          before any model is fitted.</li>
+      <li><strong>Establish the baseline.</strong> Usually GARCH(1,1) on daily
+          data or HAR on realized measures. The baseline is the number every
+          alternative has to beat, and it is chosen before the alternatives.</li>
+      <li><strong>Specify the candidates in advance.</strong> A written shortlist,
+          so the comparison cannot quietly expand until something wins.</li>
+      <li><strong>Split before you look.</strong> Time-ordered train, validation
+          and test, with purging and an embargo where targets overlap. The test
+          window is touched once.</li>
+      <li><strong>Choose the loss before seeing the result.</strong> QLIKE by
+          default. Changing the loss after seeing the ranking is the most common
+          way honest people fool themselves.</li>
+      <li><strong>Test significance.</strong> Diebold-Mariano for a pair, the
+          Model Confidence Set for a field. A lower average loss on its own is
+          not a result.</li>
+      <li><strong>Publish either way.</strong> If the complicated model does not
+          beat the simple one, that is the finding and it gets written up.</li>
+    </ol>
+    <div class="callout">
+      <p>
+        <strong>The rule that does the most work:</strong> decide steps two, five
+        and six before running step three. Nearly every spectacular volatility
+        result that later evaporates was produced by making one of those three
+        choices after seeing how it affected the answer.
+      </p>
+    </div>
+
+    <h2>Measurement comes before modelling</h2>
+    <p>
+      Volatility is latent. Everything downstream inherits the quality of the
+      proxy you chose for it, which is why we spend more time here than on model
+      selection. The decisions that matter most:
+    </p>
+    <ul>
+      <li><strong>Frequency.</strong> Finer sampling reduces estimator variance
+          and increases microstructure bias. Five-minute returns are the pragmatic
+          compromise; realized kernels let you use more of the data honestly.</li>
+      <li><strong>Jumps.</strong> Bipower variation separates the continuous part
+          from jumps. They have very different persistence, so pooling them
+          degrades the forecast of both.</li>
+      <li><strong>The overnight gap.</strong> A large share of daily variance
+          arrives while the market is shut. Dropping it, scaling it or modelling
+          it separately are all defensible; doing it silently is not.</li>
+      <li><strong>Proxy error.</strong> The target is itself an estimate. Only
+          certain loss functions preserve the true model ranking when the proxy is
+          noisy, which constrains step six above.</li>
+    </ul>
+
+    <h2>How we evaluate</h2>
+    <ul>
+      <li><strong>QLIKE</strong> as the default loss &mdash; scale-invariant and
+          robust to proxy noise, unlike MSE on variance, which a handful of crisis
+          days can decide on their own.</li>
+      <li><strong>Horizon by horizon.</strong> One-day and twenty-two-day
+          forecasts are different problems and a model can win one while losing
+          the other. We report both rather than the flattering one.</li>
+      <li><strong>Rolling refits</strong> with a realistic schedule, respecting
+          publication lags on any external variable.</li>
+      <li><strong>Diebold-Mariano</strong> for pairwise comparisons and the
+          <strong>Model Confidence Set</strong> when several models are in play.</li>
+      <li><strong>Purged, embargoed splits</strong> whenever targets overlap
+          across rows.</li>
+    </ul>
+
+    <h2>The stack</h2>
+    <ul>
+      <li><strong>Python</strong> for most work: NumPy, pandas, SciPy, statsmodels.</li>
+      <li><strong>arch</strong> for the GARCH family, with Student-t and skew-t
+          innovations where the tails demand it.</li>
+      <li><strong>scikit-learn, XGBoost, LightGBM</strong> for tree ensembles;
+          <strong>PyTorch</strong> for sequence models.</li>
+      <li><strong>R</strong> where the package is simply better &mdash;
+          <em>rugarch</em> and <em>highfrequency</em> in particular.</li>
+      <li><strong>QuantLib</strong> for pricing and surface construction.</li>
+      <li>Fixed seeds, pinned versions, and scripts that run top to bottom on a
+          clean machine. If it does not reproduce, it is not finished.</li>
+    </ul>
+
+    <h2>Data</h2>
+    <p>
+      Daily OHLC and adjusted closes across equity indices, single names, rates,
+      FX and commodities; intraday trades and quotes where we can get them;
+      option chains for implied surfaces and the variance risk premium; macro
+      release calendars; and European power and gas, where volatility behaves
+      unlike anything in the equity literature and the published research is
+      thinner than the stakes justify.
+    </p>
+
+    <h2>What gets published</h2>
+    <p>
+      Null results, in full. A note saying that gradient boosting failed to beat
+      HAR on a given dataset is more useful than a tuned configuration that beats
+      it on one window, and it is the kind of result the literature
+      systematically under-reports. Where we cannot share data, we share the
+      protocol and the code path so the work can be repeated on comparable data.
+    </p>
+
+    <h2>Working with us</h2>
+    <p>
+      We collaborate on applied problems, take questions on published notes, and
+      are happy to be told we are wrong in public. If you have a dataset, a
+      question or a disagreement, write to
+      <a href="mailto:info@volatility-insights.com">info@volatility-insights.com</a>.
+    </p>
+
+    <h2>Further reading</h2>
+    <ul class="refs">
+      <li>Patton, A. J. (2011). Volatility Forecast Comparison using Imperfect Volatility Proxies. <em>Journal of Econometrics</em> 160(1), 246&ndash;256.</li>
+      <li>Hansen, P. R., Lunde, A. &amp; Nason, J. M. (2011). The Model Confidence Set. <em>Econometrica</em> 79(2), 453&ndash;497.</li>
+      <li>Diebold, F. X. &amp; Mariano, R. S. (1995). Comparing Predictive Accuracy. <em>Journal of Business &amp; Economic Statistics</em> 13(3), 253&ndash;263.</li>
+      <li>Bergmeir, C. &amp; Benitez, J. M. (2012). On the use of cross-validation for time series predictor evaluation. <em>Information Sciences</em> 191, 192&ndash;213.</li>
+      <li>Andersen, T. G. &amp; Bollerslev, T. (1998). Answering the Skeptics: Yes, Standard Volatility Models Do Provide Accurate Forecasts. <em>International Economic Review</em> 39(4), 885&ndash;905.</li>
+    </ul>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Volatility Insights &middot; quantitative volatility research</span>
+    <span class="links">
+      <a href="mailto:info@volatility-insights.com">Email</a>
+      <a href="https://www.youtube.com/@volatility_insights" rel="noopener">YouTube</a>
+      <a href="../">Home</a>
+    </span>
+  </div>
+</footer>
+
+</body>
+</html>
