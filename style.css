@@ -49,7 +49,7 @@ code, .mono { font-family: var(--mono); }
 }
 /* translateY is half the nav height, so the header rule bisects the badge */
 .brand img {
-  width: 76px; height: 76px; border-radius: 50%; display: block; flex: none;
+  width: 91px; height: 91px; border-radius: 50%; display: block; flex: none;
   transform: translateY(32px);
   background: var(--bg);
   box-shadow: 0 0 0 1px var(--line), 0 0 22px rgba(127,212,232,.22);
@@ -225,5 +225,5 @@ footer a { color: var(--muted); }
   .nav nav { gap: 14px; }
   .nav nav a { font-size: .68rem; }
   .brand { gap: 11px; font-size: .72rem; }
-  .brand img { width: 54px; height: 54px; }
+  .brand img { width: 65px; height: 65px; }
 }
