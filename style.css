@@ -213,6 +213,46 @@ h3 { font-size: 1.02rem; margin: 0 0 9px; font-weight: 600; }
 }
 .back:hover { color: var(--accent); }
 
+/* ---------- curve posture ---------- */
+.wrap-wide { width: min(1380px, calc(100% - 56px)); margin: 0 auto; }
+.curve-page { min-height: calc(100vh - 64px); padding: 92px 0 42px; }
+.curve-heading {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 560px);
+  gap: 48px; align-items: end; margin-bottom: 42px;
+}
+.curve-heading .eyebrow { margin-bottom: 12px; }
+.curve-heading h1 { font-size: clamp(2rem, 5vw, 3.8rem); margin: 0; }
+.curve-dek { color: var(--muted); margin: 0; max-width: 56ch; }
+.curve-stats {
+  display: grid; grid-template-columns: 1.35fr repeat(6, 1fr);
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.curve-stats div { padding: 17px 14px; border-left: 1px solid var(--line-soft); }
+.curve-stats div:first-child { border-left: 0; padding-left: 0; }
+.curve-stats span {
+  display: block; color: var(--dim); font: .65rem/1.2 var(--mono);
+  letter-spacing: .14em; text-transform: uppercase; margin-bottom: 7px;
+}
+.curve-stats strong {
+  display: block; color: var(--text); font: 600 .95rem/1.2 var(--mono);
+}
+.curve-stage { border: 1px solid var(--line-soft); background: var(--panel); }
+#curve-chart { width: 100%; min-height: 820px; }
+.chart-loading, .chart-error {
+  margin: 0; padding: 80px 24px; text-align: center; color: var(--muted);
+  font-family: var(--mono); font-size: .8rem;
+}
+.chart-error { color: var(--accent-2); }
+.curve-method {
+  display: flex; flex-wrap: wrap; gap: 16px 32px; padding-top: 22px;
+  color: var(--dim); font-size: .78rem;
+}
+.curve-method p { margin: 0; }
+.curve-method span {
+  color: var(--accent); font-family: var(--mono); margin-right: 7px;
+}
+
 /* ---------- footer ---------- */
 footer { padding: 46px 0 60px; color: var(--dim); font-size: .88rem; }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
@@ -226,4 +266,16 @@ footer a { color: var(--muted); }
   .nav nav a { font-size: .68rem; }
   .brand { gap: 11px; font-size: .72rem; }
   .brand img { width: 65px; height: 65px; }
+  .wrap-wide { width: min(100% - 24px, 1380px); }
+  .curve-page { padding-top: 62px; }
+  .curve-heading { grid-template-columns: 1fr; gap: 18px; margin-bottom: 30px; }
+  .curve-dek { font-size: .92rem; }
+  .curve-stats { grid-template-columns: repeat(4, 1fr); }
+  .curve-stats div { padding: 13px 8px; }
+  .curve-stats div:first-child { padding-left: 8px; }
+  .curve-stats div:nth-child(5) { border-left: 0; }
+  .curve-stats strong { font-size: .8rem; }
+  .curve-stage { margin: 0; width: 100%; border-left: 0; border-right: 0; }
+  #curve-chart { min-height: 900px; }
+  .curve-method { padding-left: 12px; padding-right: 12px; }
 }

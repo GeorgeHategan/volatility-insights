@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIX curve posture &mdash; Volatility Insights</title>
+<meta name="description" content="Interactive VIX, VX30 and VX60 term-structure history.">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+<link rel="icon" href="../logo.png">
+<link rel="apple-touch-icon" href="../logo.png">
+<link rel="stylesheet" href="../style.css">
+<meta name="theme-color" content="#06111c">
+<script src="https://cdn.plot.ly/plotly-4.1.1.min.js" charset="utf-8"></script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../logo.png" alt="">Volatility <span>Insights</span></a>
+  </div>
+</header>
+
+<main class="curve-page">
+  <div class="curve-heading wrap-wide">
+    <div>
+      <p class="eyebrow">VIX term structure</p>
+      <h1>Curve posture over time</h1>
+    </div>
+    <p class="curve-dek">
+      Spot volatility against constant 30-day and 60-day VX futures.
+      The lower panels separate front premium from back slope and expose
+      curvature in the 30-day belly.
+    </p>
+  </div>
+
+  <div class="curve-stats wrap-wide" aria-label="Latest curve readings">
+    <div><span>As of</span><strong id="as-of">Loading</strong></div>
+    <div><span>VIX</span><strong id="stat-vix">&mdash;</strong></div>
+    <div><span>VX30</span><strong id="stat-vx30">&mdash;</strong></div>
+    <div><span>VX60</span><strong id="stat-vx60">&mdash;</strong></div>
+    <div><span>Front</span><strong id="stat-front">&mdash;</strong></div>
+    <div><span>Back</span><strong id="stat-back">&mdash;</strong></div>
+    <div><span>Belly</span><strong id="stat-belly">&mdash;</strong></div>
+  </div>
+
+  <div class="curve-stage wrap-wide">
+    <div id="curve-chart" role="img" aria-label="Interactive history of VIX, VX30 and VX60 curve posture">
+      <p class="chart-loading">Loading curve history&hellip;</p>
+    </div>
+    <noscript><p class="chart-error">JavaScript is required to draw the interactive chart.</p></noscript>
+  </div>
+
+  <div class="curve-method wrap-wide">
+    <p><span>VX30</span> Constant 30-calendar-day VX future</p>
+    <p><span>VX60</span> Constant 60-calendar-day VX future</p>
+    <p><span>Belly</span> VX30 minus the midpoint of VIX and VX60</p>
+  </div>
+</main>
+
+<script src="chart.js"></script>
+</body>
+</html>
