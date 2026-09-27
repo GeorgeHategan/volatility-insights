@@ -12,6 +12,7 @@ const COLORS = {
   positive: "#69c5a5",
   negative: "#ef6262"
 };
+const PREVIEW_END = Date.parse("2026-10-05T00:00:00Z");
 
 const formatNumber = value => value.toFixed(2);
 const formatSigned = (value, suffix = "") =>
@@ -135,44 +136,25 @@ function buildChart(rows) {
   });
 }
 
-function decodeBase64Url(value) {
-  const base64 = value.replaceAll("-", "+").replaceAll("_", "/");
-  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
-  return Uint8Array.from(atob(padded), character => character.charCodeAt(0));
+if (Date.now() >= PREVIEW_END) {
+  document.querySelector("#curve-chart").innerHTML =
+    '<p class="chart-error">This preview ended on October 5, 2026.</p>';
+} else {
+  fetch("data.json", {cache: "no-store"})
+    .then(response => {
+      if (!response.ok) throw new Error(`Data request failed: ${response.status}`);
+      return response.json();
+    })
+    .then(payload => {
+      if (payload.schema !== 1 || !payload.observations?.length) {
+        throw new Error("Curve data is empty or incompatible");
+      }
+      setLatest(payload.observations.at(-1));
+      buildChart(payload.observations);
+    })
+    .catch(error => {
+      console.error(error);
+      document.querySelector("#curve-chart").innerHTML =
+        '<p class="chart-error">Curve history could not be loaded.</p>';
+    });
 }
-
-function decodeHex(value) {
-  if (!/^[0-9a-f]{64}$/i.test(value)) throw new Error("Access key missing");
-  return Uint8Array.from(value.match(/.{2}/g), byte => parseInt(byte, 16));
-}
-
-async function loadCurveData() {
-  const rawKey = decodeHex(location.hash.slice(1));
-  const response = await fetch("data.enc", {cache: "no-store"});
-  if (!response.ok) throw new Error(`Data request failed: ${response.status}`);
-  const encrypted = await response.json();
-  if (encrypted.version !== 1) throw new Error("Incompatible encrypted data");
-  const key = await crypto.subtle.importKey(
-    "raw", rawKey, {name: "AES-GCM"}, false, ["decrypt"]
-  );
-  const plaintext = await crypto.subtle.decrypt(
-    {name: "AES-GCM", iv: decodeBase64Url(encrypted.iv), tagLength: 128},
-    key,
-    decodeBase64Url(encrypted.data)
-  );
-  return JSON.parse(new TextDecoder().decode(plaintext));
-}
-
-loadCurveData()
-  .then(payload => {
-    if (payload.schema !== 1 || !payload.observations?.length) {
-      throw new Error("Curve data is empty or incompatible");
-    }
-    setLatest(payload.observations.at(-1));
-    buildChart(payload.observations);
-  })
-  .catch(error => {
-    console.error(error);
-    document.querySelector("#curve-chart").innerHTML =
-      '<p class="chart-error">This view requires its complete private URL.</p>';
-  });

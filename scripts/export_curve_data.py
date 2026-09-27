@@ -10,8 +10,9 @@ from pathlib import Path
 import duckdb
 
 
+ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB = Path.home() / "dev/vix-dashboard/data/vix.duckdb"
-DEFAULT_OUTPUT = Path("/tmp/volatility-insights-curve.json")
+DEFAULT_OUTPUT = ROOT / "curveposture/data.json"
 
 
 def export(db_path: Path, output_path: Path) -> dict:
